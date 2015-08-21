@@ -1,0 +1,147 @@
+# Copyright 2015 Yin Zheng, Yu-Jin Zhang, Hugo Larochelle. All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without modification, are
+# permitted provided that the following conditions are met:
+#
+#    1. Redistributions of source code must retain the above copyright notice, this list of
+#       conditions and the following disclaimer.
+#
+#    2. Redistributions in binary form must reproduce the above copyright notice, this list
+#       of conditions and the following disclaimer in the documentation and/or other materials
+#       provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY Yin Zheng, Yu-Jin Zhang, Hugo Larochelle ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+# MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL
+# Yin Zheng, Yu-Jin Zhang, Hugo Larochelle OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+# INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED
+# TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+# INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+# THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
+# The views and conclusions contained in the software and documentation are those of the
+# authors and should not be interpreted as representing official policies, either expressed
+# or implied, of Yin Zheng, Yu-Jin Zhang, Hugo Larochelle.
+
+
+		
+'''
+@reference: A Deep and Autoregressive Approach for Topic Modeling of Multimodal Data, 
+			IEEE Trans. Pattern Analysis and Machine Intelligence (PAMI)
+
+@Authors:     Yin Zheng, Ph.D of Tsinghua University.
+              Yu-Jin Zhang, Tsinghua University,
+              Hugo Larochelle, University of Sherbrooke and Twitter
+
+@contact: Yin Zheng, yzheng3xg@gmail.com
+          
+'''
+
+
+We provide:
+1. SupDeepDocNADE.py : Classes of DeepDocNADE and SupDeepDocNADE, which is used by run_pretrain_DeepDocNADE.py and run_SupDeepDocNADE.py
+2. run_pretrain_DeepDocNADE.py : Python script to pretrain DeepDocNADE model on MIR Flickr Unlabeled data
+3. run_SupDeepDocNADE.py : Python script to train and test SupDeepDocNADE mdoel.
+4. gen_dataset_labeled.py: Python script to generate the labeled dateset files needed by the model
+5. gen_dataset_unlabeled.py: Python script to generate the unlabeled dateset files needed by the model
+6. MIR_Flickr_Theano_lab.py: Python script to load labeled dataset and provide interface to SupDeepDocNADE model
+7. MIR_Flickr_Theano_Unlab.py: Python script to load unlabeled dataset and provide interface to DeepDocNADE model
+
+===================================================================================================================== 	
+
+0. Install liblinear (http://www.csie.ntu.edu.tw/~cjlin/liblinear/) and put liblinear into the PYTHONPATH
+	NOTE: make sure that you can use liblinear in python.  To test whether you config liblinear successfully, you could
+	use "from liblinearutil import *" in python.
+
+1. Generate the dataset:
+	1) Download the dataset from Nitsh's homepage: http://www.cs.toronto.edu/~nitish/multimodal/index.html
+	2) Run "python gen_dataset_labeled.py" to generate the labeled dataset. 
+		a) Read the comments in the script about how to use it.
+		b) create a file IN THE SAME PATH OF THE LABELED DATASET named "meta.txt" with the following lines in the meta.txt
+			voc_size:2000
+			n_regions:14
+			text_voc_size:2000
+			global_feat_size:1857
+			n_classes:38
+		c) Create a file IN THE SAME PATH OF THE LABELED DATASET named "sizes.txt" with the following content:
+			10000
+			5000
+			10000
+	
+	3) Run "python gen_dataset_unlabeled.py" to generate the unlabeled dataset. 
+		a) Read the comments in the script about how to use it.
+		b) create a file IN THE SAME PATH OF THE UNLABELED DATASET with the name meta.txt, the content is:
+			voc_size:2000
+			n_regions:14
+			text_voc_size:2000
+			global_feat_size:1857
+			dataset_split:50
+		c) create a file IN THE SAME PATH OF THE UNLABELED DATASET named "sizes.txt" with the following content:
+			975000
+			
+		
+			
+2. Run run_pretrain_DeepDocNADE.py to pretrain DeepDocNADE model on unlabeled data:
+		python run_pretrain_DeepDocNADE.py n_pretrain pre_learning_rate hidden_size activation_function  dropout_rate model_file_dir unlab_dataset_dir batch_size anno_weight  polyakexp_weight model_init
+	
+
+	The parameters of the script is as follows:
+	
+		n_pretrain : number of iterations
+		pre_learning_rate : learning rate of the pretraining 
+		hidden_size : the hidden size of the model, e.g. 2048_2048_2048 is a 3 hidden layers model with 2048 units each layer
+		activation_function : the activation function of the hidden layers, "sigmoid, relu or tanh" 
+		dropout_rate: the dropout rate for each hidden layer, e.g. "0.5_0.5_0.5" means dropout rate is 0.5 for each layer
+		model_file_dir: path to save the pretrained model
+		unlab_dataset_dir: the path to the unlabeled dataset 
+		batch_size: the batch size 
+		anno_weight: annotation weight 
+		polyakexp_weight: polyak weight
+		model_init: path to the saved pretrain model, which is used to continue_training based on the trained model. It could be NULL if no model saved before.
+	
+	One example of the scipt is: 
+		python run_pretrain_DeepDocNADE.py 6000 0.03 2048_2048_2048 reclin 0.5_0.5_0.5 PATH_TO_SAVE_THE_MODEL PATH_TO_UNLABELED_DATA 500 12000 std 0.9995 PATH_TO_SAVED_MODEL
+
+
+3. Run run_SupDeepDocNADE.py to train SupDeepDocNADE model on labeled data, which could be trained from scratch or initialize from pretrained model on unlabeled data :
+		python run_SupDeepDocNADE.py folder_ID use_pretrain max_iter look_ahead hidden_size learning_rate unsup_weight activation_function Linear_minC, Linear_maxC, dropout_rate uniresult_dir Pretrain_model_name lab_dataset_dir batch_size anno_weight polyakexp_weight
+	
+	The parameters are as follows:
+		folder_ID : ID of the dataset ( 1 to 5 )
+		use_pretrain: Whether use pretrained model or training from randomly initialized parameters (True or False)
+		max_iter: number of max iterations
+		look_ahead: early stop if number of iterations without improvement exceed the number of look ahead
+		hidden_size: the hidden size of the model, e.g. 2048_2048_2048 is a 3 hidden layers model with 2048 units each layer
+		learning_rate: learning rate of training process
+		unsup_weight: the weight of the unsupervised part 
+		activation_function: the activation function of the hidden layers, "sigmoid, relu or tanh" 
+		Linear_minC: the minimum value of C for linear SVM (in log_2 space) 
+		Linear_maxC: the max value of C for linear SVM (in log_2 space) 
+		dropout_rate: the dropout rate for each hidden layer, e.g. "0.5_0.5_0.5" means dropout rate is 0.5 for each layer
+		uniresult_dir: the path to save the results
+		Pretrain_model_name: the path and the name of the pretrained model if you set use_pretrain True. Otherwise, any string
+		lab_dataset_dir: the path to the labeled dataset
+		batch_size : the mini-batch size
+		anno_weight: the weight of the annotation words
+		polyakexp_weight: polyak weight
+	
+	One example of the script is: 
+		
+		python run_SupDeepDocNADE.py 1 True 20000 300 2048_2048_2048 0.01 0.25 reclin -17 10 0.5_0.5_0.5 PATH_TO_SAVE_RESULTS PATH_NAME_OF_PRETRAINED_MODEL PATH_TO_LABELED_DATA 500 12000  0.9995
+	
+	
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
