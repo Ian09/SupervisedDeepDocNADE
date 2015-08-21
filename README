@@ -27,12 +27,11 @@
 
 		
 '''
-@reference: A Deep and Autoregressive Approach for Topic Modeling of Multimodal Data, 
-			IEEE Trans. Pattern Analysis and Machine Intelligence (PAMI)
+@reference: A Deep and Autoregressive Approach for Topic Modeling of Multimodal Data, IEEE Trans. Pattern Analysis and Machine Intelligence (PAMI)
 
-@Authors:     Yin Zheng, Ph.D of Tsinghua University.
+@Authors:     Yin Zheng, Received Ph.D from Tsinghua University, 2015. Homepage: https://sites.google.com/site/zhengyin1126/
               Yu-Jin Zhang, Tsinghua University,
-              Hugo Larochelle, University of Sherbrooke and Twitter
+              Hugo Larochelle, University of Sherbrooke and Twitter. Homepage: http://www.dmi.usherb.ca/~larocheh/index_en.html
 
 @contact: Yin Zheng, yzheng3xg@gmail.com
           
