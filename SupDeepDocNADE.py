@@ -273,7 +273,7 @@ class DeepDocNADE(object):
 
         condition_bias = T.dot(global_feature, G)
 #           
-        tmp_input = input
+#        tmp_input = input
         for i in xrange(n_layer_to_build):
             if i==0:
                 h = ifelse(T.neq(flag_train, 0) ,self.activation(T.dot(tmp_input, W[i])+c[i]+condition_bias)*(self.rng_theano.binomial(n=1, p=1.0-self.dropout_rate[i], size = (tmp_input.shape[0],W[i].shape[1]),dtype=theano.config.floatX)), self.activation(T.dot(tmp_input, W[i])+c[i]+condition_bias)*(1.-self.dropout_rate[i]))
